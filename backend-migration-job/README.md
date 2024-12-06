@@ -1,4 +1,4 @@
-# mig-test
+# Migration job
 
 
 #### Create new GitHub application
