@@ -1,62 +1,71 @@
-import json
+# Copyright 2024 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import os
-import random
-import sys
-import time
+import subprocess
+import requests
 
-# Retrieve Job-defined env vars
-TASK_INDEX = os.getenv("CLOUD_RUN_TASK_INDEX", 0)
-TASK_ATTEMPT = os.getenv("CLOUD_RUN_TASK_ATTEMPT", 0)
-# Retrieve User-defined env vars
-SLEEP_MS = os.getenv("SLEEP_MS", 0)
-FAIL_RATE = os.getenv("FAIL_RATE", 0)
+from git import Repo
+from github import Auth
 
 
-# Define main script
-def main(sleep_ms=0, fail_rate=0):
-    """Program that simulates work using the sleep method and random failures.
+def clone_repo(repo_name: str, github_account: str):
+    try:
+        github_app_id = os.environ["GITHUB_APP_ID"]
+        github_installation_id = os.environ["GITHUB_APP_INSTALLATION_ID"]
+        private_key = os.environ["GITHUB_APP_PRIVATE_KEY"]
 
-    Args:
-        sleep_ms: number of milliseconds to sleep
-        fail_rate: rate of simulated errors
-    """
-    print(f"Starting Task #{TASK_INDEX}, Attempt #{TASK_ATTEMPT}...")
-    # Simulate work by waiting for a specific amount of time
-    time.sleep(float(sleep_ms) / 1000)  # Convert to seconds
-
-    # Simulate errors
-    random_failure(float(fail_rate))
-
-    print(f"Completed Task #{TASK_INDEX}.")
-
-
-def random_failure(rate):
-    """Throws an error based on fail rate
-
-    Args:
-        rate: a float between 0 and 1
-    """
-    if rate < 0 or rate > 1:
-        # Return without retrying the Job Task
-        print(
-            f"Invalid FAIL_RATE env var value: {rate}. "
-            + "Must be a float between 0 and 1 inclusive."
+        auth = Auth.AppAuth(
+            github_app_id,
+            private_key,
         )
+
+        jwt_token = auth.create_jwt()
+
+        response = requests.post(
+            f"https://api.github.com/app/installations/{github_installation_id}/access_tokens",
+            headers={
+                "Authorization": f"Bearer {jwt_token}",
+                "Accept": "application/vnd.github+json",
+            },
+        )
+
+        installation_token = response.json()["token"]
+
+        repo = Repo.clone_from(
+            f"https://x-access-token:{installation_token}@github.com/{github_account}/{repo_name}.git",
+            repo_name,
+        )
+
+        print(repo.branches)
+
+        subprocess.run(["ls", "-l", repo_name])
+    except Exception as e:
+        print(f"Error cloning repository: {e}")
         return
 
-    random_failure = random.random()
-    if random_failure < rate:
-        raise Exception("Task failed.")
+
+def main():
+    github_account = os.environ["GITHUB_ACCOUNT"]
+    repo_name = os.environ["REPO_NAME"]
+
+    print("Running workflow step", os.environ["WORKFLOW_STEP"])
+    print("Account name:", github_account)
+    print("Repo name:", repo_name)
+
+    clone_repo(repo_name, github_account)
 
 
-# Start script
 if __name__ == "__main__":
-    try:
-        main(SLEEP_MS, FAIL_RATE)
-    except Exception as err:
-        message = (
-            f"Task #{TASK_INDEX}, " + f"Attempt #{TASK_ATTEMPT} failed: {str(err)}"
-        )
-
-        print(json.dumps({"message": message, "severity": "ERROR"}))
-        sys.exit(1)  # Retry Job Task by exiting the process
+    main()
