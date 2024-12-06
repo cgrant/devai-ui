@@ -10,14 +10,14 @@ gcloud services enable \
     eventarc.googleapis.com \
     firestore.googleapis.com \
     run.googleapis.com \
-    storage.googleapis.com
+    storage.googleapis.com \
+    secretmanager.googleapis.com
 
 
 # Build & Deploy Front End React App
 gcloud builds submit ./frontend --tag gcr.io/$PROJECT_ID/devai-ui --project $PROJECT_ID
 
 gcloud run deploy devai-ui --image gcr.io/$PROJECT_ID/devai-ui --project $PROJECT_ID --platform managed --allow-unauthenticated
-
 
 # Deploy Backend Cloud Run Job
 gcloud run jobs deploy devai-migration-job \
