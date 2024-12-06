@@ -19,6 +19,16 @@ gcloud builds submit ./frontend --tag gcr.io/$PROJECT_ID/devai-ui --project $PRO
 
 gcloud run deploy devai-ui --image gcr.io/$PROJECT_ID/devai-ui --project $PROJECT_ID --platform managed --allow-unauthenticated
 
+# Deploy Backend Cloud Run Job
+gcloud run jobs deploy devai-migration-job \
+    --source ./backend-job \
+    --tasks 50 \
+    --set-env-vars SLEEP_MS=10000 \
+    --set-env-vars FAIL_RATE=0.1 \
+    --max-retries 5 \
+    --region $REGION \
+    --project=$PROJECT_ID \
+    --quiet
 
 #Create Firestore DB
 gcloud firestore databases create --location=$REGION
