@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { db } from './utils/firebase';
+import { db, logout  } from './utils/firebase';
 import {
   collection,
   getDocs,
@@ -15,6 +15,7 @@ import {
   ListItem,
   ListItemText,
   IconButton,
+  Box,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
@@ -119,9 +120,21 @@ function MigrationList() {
       setEditingMigration(null);
     }
   };
-
+  const handleLogout = async () => {
+    try {
+      await logout();
+      // User logged out successfully
+    } catch (error) {
+      console.error(error);
+    }
+  };
   return (
     <div>
+      <Box display="flex" justifyContent="flex-end"> {/* Add a Box for layout */}
+        <Button variant="contained" color="error" onClick={handleLogout}>
+          Logout
+        </Button>
+      </Box>
       {/* Input field with MUI */}
       <TextField
         label="Enter migration title"
