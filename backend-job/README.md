@@ -14,5 +14,6 @@ gcloud run jobs deploy devai-migration-job \
 
 
 
-gcloud run jobs execute devai-migration-job --region us-east1
+gcloud run jobs execute devai-migration-job \
+    --region us-east1
 ```
