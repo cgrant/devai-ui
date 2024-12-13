@@ -4,13 +4,18 @@ import random
 import sys
 import time
 
+from google.cloud import firestore
+
 # Retrieve Job-defined env vars
 TASK_INDEX = os.getenv("CLOUD_RUN_TASK_INDEX", 0)
 TASK_ATTEMPT = os.getenv("CLOUD_RUN_TASK_ATTEMPT", 0)
 # Retrieve User-defined env vars
 SLEEP_MS = os.getenv("SLEEP_MS", 0)
 FAIL_RATE = os.getenv("FAIL_RATE", 0)
+FIRESTORE_DOCUMENT_ID = os.getenv("DOCUMENT_ID")
 
+# Initialize Firestore client
+db = firestore.Client()
 
 # Define main script
 def main(sleep_ms=0, fail_rate=0):
@@ -26,6 +31,18 @@ def main(sleep_ms=0, fail_rate=0):
 
     # Simulate errors
     random_failure(float(fail_rate))
+
+    # Write to Firestore
+    if FIRESTORE_DOCUMENT_ID:
+        doc_ref = db.collection("migrations").document(FIRESTORE_DOCUMENT_ID)  # Replace "your-collection-name"
+        doc_ref.update({
+            "task_index": TASK_INDEX,
+            "task_attempt": TASK_ATTEMPT,
+            "timestamp": firestore.SERVER_TIMESTAMP
+        })
+        print(f"Updated Firestore document: {FIRESTORE_DOCUMENT_ID}")
+    else:
+        print("FIRESTORE_DOCUMENT_ID not set, skipping Firestore update.")
 
     print(f"Completed Task #{TASK_INDEX}.")
 

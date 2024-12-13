@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { db, logout  } from './utils/firebase';
+
+import { db, logout, functions } from "./utils/firebase";
 import {
   collection,
-  getDocs,
   addDoc,
   deleteDoc,
   doc,
@@ -17,12 +17,18 @@ import {
   IconButton,
   Box,
 } from '@mui/material';
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import PendingIcon from "@mui/icons-material/Pending";
+
 import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
+import { httpsCallable } from 'firebase/functions';
+import { onSnapshot } from "firebase/firestore"; 
 
 interface Migration {
   id: string;
   title: string;
+  status: string; 
+  task_index?: string;  // task_index is now optional
 }
 
 function MigrationList() {
@@ -31,29 +37,22 @@ function MigrationList() {
   const [editingMigration, setEditingMigration] = useState<Migration | null>(null);
 
   useEffect(() => {
-    const fetchMigrations = async () => {
-      try {
-        const querySnapshot = await getDocs(collection(db, 'migrations'));
-        const fetchedMigrations: Migration[] = [];
-        querySnapshot.forEach((doc) => {
-          fetchedMigrations.push({ id: doc.id, ...doc.data() } as Migration);
-        });
-        setMigrations(fetchedMigrations);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    };
+    const unsubscribe = onSnapshot(collection(db, 'migrations'), (snapshot) => {
+      const fetchedMigrations: Migration[] = [];
+      snapshot.forEach((doc) => {
+        fetchedMigrations.push({ id: doc.id, ...doc.data() } as Migration);
+      });
+      setMigrations(fetchedMigrations);
+    });
 
-    fetchMigrations();
+    return () => unsubscribe(); 
   }, []);
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setNewTitle(event.target.value);
   };
 
-  const handleInputKeyDown = async (
-    event: React.KeyboardEvent<HTMLInputElement>,
-  ) => {
+  const handleInputKeyDown = async (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
       await addMigration();
     }
@@ -61,11 +60,16 @@ function MigrationList() {
 
   const addMigration = async () => {
     try {
-      if (newTitle.trim() !== '') {
+      if (newTitle.trim() !== '') { 
         const docRef = await addDoc(collection(db, 'migrations'), {
           title: newTitle,
+          status: 'pending', 
         });
-        setMigrations([...migrations, { id: docRef.id, title: newTitle }]);
+        setMigrations([...migrations, { 
+          id: docRef.id, 
+          title: newTitle, 
+          status: 'pending', 
+        }]);
         setNewTitle('');
       }
     } catch (error) {
@@ -98,9 +102,7 @@ function MigrationList() {
     }
   };
 
-  const handleTitleKeyDown = async (
-    event: React.KeyboardEvent<HTMLInputElement>,
-  ) => {
+  const handleTitleKeyDown = async (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter' && editingMigration) {
       await updateMigration(editingMigration);
     }
@@ -120,22 +122,35 @@ function MigrationList() {
       setEditingMigration(null);
     }
   };
+
   const handleLogout = async () => {
     try {
       await logout();
-      // User logged out successfully
     } catch (error) {
       console.error(error);
     }
   };
+
+  const updateMigrationStatus = async (migrationId: string) => {
+    try {
+      const migrationToUpdate = migrations.find(mig => mig.id === migrationId);
+      if (migrationToUpdate) {
+        const newStatus = migrationToUpdate.status === 'completed' ? 'pending' : 'completed';
+        await updateDoc(doc(db, 'migrations', migrationId), { status: newStatus }); 
+      }
+    } catch (error) {
+      console.error("Error updating status:", error);
+    }
+  };
+
   return (
     <div>
-      <Box display="flex" justifyContent="flex-end"> {/* Add a Box for layout */}
+      <Box display="flex" justifyContent="flex-end"> 
         <Button variant="contained" color="error" onClick={handleLogout}>
           Logout
         </Button>
       </Box>
-      {/* Input field with MUI */}
+      
       <TextField
         label="Enter migration title"
         value={newTitle}
@@ -144,11 +159,11 @@ function MigrationList() {
         fullWidth
         margin="normal"
       />
+
       <Button variant="contained" onClick={addMigration}>
         Add Migration
       </Button>
 
-      {/* Migration list with MUI */}
       <List>
         {migrations.map((mig) => (
           <ListItem key={mig.id} disablePadding>
@@ -162,11 +177,31 @@ function MigrationList() {
                 fullWidth
               />
             ) : (
-              <ListItemText
-                primary={mig.title}
-                onClick={() => handleTitleClick(mig)}
-              />
+              <>
+                <ListItemText
+                  primary={mig.title}
+                  onClick={() => handleTitleClick(mig)}
+                />
+                {mig.task_index && ( // Conditionally render task_index
+                  <ListItemText
+                    secondary={`Task Index: ${mig.task_index}`}
+                    onClick={() => handleTitleClick(mig)}
+                  />
+                )}
+              </>
             )}
+
+            <IconButton
+              edge="end"
+              aria-label="update status"
+              onClick={() => updateMigrationStatus(mig.id)}
+            >
+              {mig.status === "completed" ? (
+                <CheckCircleOutlineIcon color="success" />
+              ) : (
+                <PendingIcon color="warning" />
+              )}
+            </IconButton>
             <IconButton
               edge="end"
               aria-label="delete"
