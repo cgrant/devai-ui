@@ -9,6 +9,42 @@ const admin = require('firebase-admin');
 
 initializeApp();
 
+exports.runJobManually = functions.https.onCall(async (data, context) => {
+  const migrationId = data.data.migrationId;
+  console.log("Data received:", data);
+  try {
+    const projectId = 'crg-lkummel-01'; 
+    const location = 'us-east1'; 
+    const jobName = 'devai-migration-job'; 
+
+    const jobPath = `projects/${projectId}/locations/${location}/jobs/${jobName}`;
+    const client = await auth.getClient({ scopes: ['https://www.googleapis.com/auth/cloud-platform'] });
+    const run = await google.run({ version: 'v2', auth: client });
+    const documentId = migrationId; 
+
+    const request = {
+      name: jobPath,
+      requestBody: { 
+        overrides: {
+          containerOverrides: [
+            {
+              env: [
+                { name: 'DOCUMENT_ID', value: documentId },
+              ],
+            },
+          ],
+        },
+      },
+    };
+
+    const response = await run.projects.locations.jobs.run(request);
+    console.log(`Cloud Run job executed: ${JSON.stringify(response.data)}`);
+  } catch (error) {
+    console.error('Error executing Cloud Run job:', error);
+  }
+  return "Hello from Firebase Function!";
+});
+
 exports.updateMigrationStatus = functions.https.onCall(async (payload, context) => {
   try {
     const migrationId = payload.data.migrationId;

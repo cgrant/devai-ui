@@ -8,6 +8,9 @@ import {
   doc,
   updateDoc,
 } from 'firebase/firestore';
+
+import { getFunctions, httpsCallable } from "firebase/functions";
+
 import {
   TextField,
   Button,
@@ -56,6 +59,8 @@ function MigrationList() {
       await addMigration();
     }
   };
+
+
 
   const addMigration = async () => {
     try {
@@ -141,6 +146,17 @@ function MigrationList() {
       console.error("Error updating status:", error);
     }
   };
+    const runJobManually = async (migrationId: string) => {
+      const functions = getFunctions();
+      const myFunction = httpsCallable(functions, "runJobManually");
+
+      try {
+        const result = await myFunction({ migrationId: migrationId });
+        console.log("Result:", result.data);
+      } catch (error) {
+        console.error("Error calling function:", error);
+      }
+    };
 
   return (
     <div>
@@ -189,18 +205,22 @@ function MigrationList() {
                 )}
               </>
             )}
+            <Button
+              onClick={() => runJobManually(mig.id)}
+            >Run Job
+            </Button>
 
-            <IconButton
-              edge="end"
-              aria-label="update status"
+            <Button
               onClick={() => updateMigrationStatus(mig.id)}
-            >
-              {mig.status === "completed" ? (
-                <CheckCircleOutlineIcon color="success" />
-              ) : (
-                <PendingIcon color="warning" />
-              )}
-            </IconButton>
+            >Update Value
+            </Button>
+
+            {mig.status && ( // Conditionally render task_index
+              <ListItemText
+                secondary={`Value: ${mig.status}`}
+                
+              />
+            )}
             <IconButton
               edge="end"
               aria-label="delete"
