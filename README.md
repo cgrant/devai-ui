@@ -1,6 +1,10 @@
 # Devai UI
 
+![](architecture.svg)
+
+
 Infra Sequence
+
 
 User Browser
 -> [Identity Platform](https://cloud.google.com/security/products/identity-platform#documentation) (User auth)

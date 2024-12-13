@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-import { db, logout, functions } from "./utils/firebase";
+import { db, logout } from "./utils/firebase";
 import {
   collection,
   addDoc,
@@ -21,7 +21,6 @@ import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import PendingIcon from "@mui/icons-material/Pending";
 
 import DeleteIcon from '@mui/icons-material/Delete';
-import { httpsCallable } from 'firebase/functions';
 import { onSnapshot } from "firebase/firestore"; 
 
 interface Migration {

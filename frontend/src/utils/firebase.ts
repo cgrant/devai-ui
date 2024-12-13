@@ -5,8 +5,8 @@ import { getAuth,
          createUserWithEmailAndPassword, 
          signInWithEmailAndPassword, 
          signOut} from "firebase/auth";  
-import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
-import { getFunctions, httpsCallable, connectFunctionsEmulator } from "firebase/functions";
+import { getFirestore,  } from "firebase/firestore";
+import { getFunctions, httpsCallable,  } from "firebase/functions";
 
 
 // Your web app's Firebase configuration
