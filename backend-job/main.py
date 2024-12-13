@@ -35,10 +35,9 @@ def main(sleep_ms=0, fail_rate=0):
     # Write to Firestore
     if FIRESTORE_DOCUMENT_ID:
         doc_ref = db.collection("migrations").document(FIRESTORE_DOCUMENT_ID)  # Replace "your-collection-name"
-        doc_ref.set({
+        doc_ref.update({
             "task_index": TASK_INDEX,
             "task_attempt": TASK_ATTEMPT,
-            "status": "completed",
             "timestamp": firestore.SERVER_TIMESTAMP
         })
         print(f"Updated Firestore document: {FIRESTORE_DOCUMENT_ID}")
