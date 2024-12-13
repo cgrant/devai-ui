@@ -34,14 +34,5 @@ gcloud run jobs deploy devai-migration-job \
 gcloud firestore databases create --location=$REGION
 
 # Deploy Cloud Function
-gcloud functions deploy triggerCloudRunJob \
---gen2 \
---runtime=nodejs22 \
---region=$REGION \
---trigger-location=$REGION \
---source=./cloud-functions \
---entry-point=triggerCloudRunJob \
---trigger-event-filters=type=google.cloud.firestore.document.v1.written \
---trigger-event-filters=database='(default)' \
---trigger-event-filters-path-pattern=document='migrations/{entry}'
+(cd cloud-functions && firebase deploy --only functions)
 
