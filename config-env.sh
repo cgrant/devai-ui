@@ -26,4 +26,5 @@ gcloud services enable \
     artifactregistry.googleapis.com \
     firebase.googleapis.com \
     firebaseextensions.googleapis.com \
-    pubsub.googleapis.com
+    pubsub.googleapis.com \
+    cloudbilling.googleapis.com
