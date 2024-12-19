@@ -20,8 +20,6 @@ import {
   IconButton,
   Box,
 } from '@mui/material';
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
-import PendingIcon from "@mui/icons-material/Pending";
 
 import DeleteIcon from '@mui/icons-material/Delete';
 import { onSnapshot } from "firebase/firestore"; 
