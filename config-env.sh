@@ -6,6 +6,7 @@ export PROJECT_NAME=$(gcloud projects describe $PROJECT_ID --format='value(name)
 
 export REGION=us-east1
 export WEBAPP_NAME=devai-ui
+export JOB_NAME=devai-migration-job
 
 gcloud config set project $PROJECT_ID
 
