@@ -19,6 +19,11 @@ The Cloud Function is setup to trigger when a document is added in a `migrations
 
 Each directory has setup instructions in their respective readme files. There is a unified setup script that will build and deploy the assets needed by executing the following in the project's root directory
 
+Authenticate with GCP:
+```sh
+gcloud auth application-default login
+```
+
 Be sure to set your gcloud project first
 
 ```sh
