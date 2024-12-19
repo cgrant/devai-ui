@@ -7,7 +7,7 @@ source ../config-env.sh
 
 curl -sL https://firebase.tools | upgrade=true bash
 
-firebase login --no-localhost
+firebase login --reauth --no-localhost
 
 export FIREBASE_ENABLED=$(firebase --non-interactive projects:list | grep -o -w $PROJECT_ID | wc -w)
 if [ "$FIREBASE_ENABLED" -eq "0" ]; then
